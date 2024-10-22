@@ -8,18 +8,19 @@ import (
 )
 
 type Account struct {
-	http.Client
+	client  *http.Client
 	baseURL string
 }
 
 const (
-	create = "account/create"
+	createUrl = "accounts/create"
+	verifyUrl = "accounts/verify"
 )
 
-func NewAccount(baseURL string, client http.Client) *Account {
+func NewAccount(baseURL string, client *http.Client) *Account {
 	return &Account{
 		baseURL: baseURL,
-		Client:  client,
+		client:  client,
 	}
 }
 
@@ -32,16 +33,61 @@ func (a Account) Create(email, password string) error {
 		Password: password,
 	}
 
+	err := doPost(fmt.Sprintf("%s/%s", a.baseURL, createUrl), payload,
+		nil, a.client)
+
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func (a Account) Verify(email, verificationToken string) error {
+	payload := struct {
+		Email string `json:"email"`
+		Token string `json:"token"`
+	}{
+		Email: email,
+		Token: verificationToken,
+	}
+
+	err := doPost(fmt.Sprintf("%s/%s", a.baseURL, verifyUrl), payload,
+		nil, a.client)
+
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func doPost(url string, payload interface{}, model interface{}, client *http.Client) error {
 	jsonData, err := json.Marshal(payload)
 	if err != nil {
 		return err
 	}
 
-	resp, err := a.Client.Post(fmt.Sprintf("%s/%s", a.baseURL, create),
-		"encoding/json", bytes.NewBuffer(jsonData))
+	resp, err := client.Post(url, "application/json", bytes.NewBuffer(jsonData))
 
 	if err != nil {
 		return err
+	}
+
+	if resp.StatusCode >= 300 {
+		jsonError := &JsonError{}
+		if err := json.NewDecoder(resp.Body).Decode(jsonError); err != nil {
+			return err
+		}
+		if jsonError != nil {
+			return fmt.Errorf("%s - %s", jsonError.Title, jsonError.Detail)
+		}
+	}
+
+	if resp.Body != http.NoBody {
+		if err := json.NewDecoder(resp.Body).Decode(model); err != nil {
+			return err
+		}
 	}
 
 	defer resp.Body.Close()

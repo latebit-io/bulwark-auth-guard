@@ -1,0 +1,4 @@
+github.com/google/uuid v1.6.0 h1:NIvaJDMOsjHA8n1jAhLSgzrAzy1Hgr+hNrb57e+94F0=
+github.com/google/uuid v1.6.0/go.mod h1:TIyPZe4MgqvfeYDBFedMoGGpEw/LqOeaOT+nhxU+yHo=
+github.com/latebitflip-io/go-hog v1.0.0 h1:Ky5AFKYhzTAApRM5MBJLG8rxHejVJ05b1fLVHePNe90=
+github.com/latebitflip-io/go-hog v1.0.0/go.mod h1:Gpm3jPvA9H3dkF+0Ic/Tnj/JO9J27cpL8AUCbe0uRxI=
