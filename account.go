@@ -7,6 +7,7 @@ import (
 	"net/http"
 )
 
+// Account struct is the base for account tasks
 type Account struct {
 	client  *http.Client
 	baseURL string
@@ -17,13 +18,15 @@ const (
 	verifyUrl = "accounts/verify"
 )
 
-func NewAccount(baseURL string, client *http.Client) *Account {
+// NewAccountClient creates a client for account tasks
+func NewAccountClient(baseURL string, client *http.Client) *Account {
 	return &Account{
 		baseURL: baseURL,
 		client:  client,
 	}
 }
 
+// Create will create a user account and send a verification email
 func (a Account) Create(email, password string) error {
 	payload := struct {
 		Email    string `json:"email"`
@@ -43,6 +46,7 @@ func (a Account) Create(email, password string) error {
 	return nil
 }
 
+// Verify will verify a account
 func (a Account) Verify(email, verificationToken string) error {
 	payload := struct {
 		Email string `json:"email"`

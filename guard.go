@@ -9,7 +9,7 @@ type Guard struct {
 
 func NewGuard(baseUrl string, client http.Client) *Guard {
 	return &Guard{
-		Account: NewAccount(baseUrl, &client),
+		Account: NewAccountClient(baseUrl, &client),
 		baseUrl: baseUrl,
 	}
 }

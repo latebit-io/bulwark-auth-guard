@@ -16,7 +16,7 @@ const mailHogUri = "http://localhost:8025"
 func TestAccountCreate(t *testing.T) {
 	client := &http.Client{}
 	id := uuid.New()
-	account := guard.NewAccount(baseUri, client)
+	account := guard.NewAccountClient(baseUri, client)
 	err := account.Create(fmt.Sprintf("%s@bulwark.io", id.String()), "password12!P")
 	if err != nil {
 		t.Error(err)
@@ -26,7 +26,7 @@ func TestAccountCreate(t *testing.T) {
 func TestAccountCreateDuplicate(t *testing.T) {
 	client := &http.Client{}
 	id := uuid.New()
-	account := guard.NewAccount(baseUri, client)
+	account := guard.NewAccountClient(baseUri, client)
 	err := account.Create(fmt.Sprintf("%s@bulwark.io", id.String()), "password12!P")
 	if err != nil {
 		t.Error(err)
@@ -42,7 +42,7 @@ func TestAccountCreateAndVerify(t *testing.T) {
 	client := &http.Client{}
 	id := uuid.New()
 	email := fmt.Sprintf("%s@bulwark.io", id.String())
-	account := guard.NewAccount(baseUri, client)
+	account := guard.NewAccountClient(baseUri, client)
 	err := account.Create(email, "password12!P")
 	if err != nil {
 		t.Error(err)
@@ -56,7 +56,7 @@ func TestAccountCreateAndVerify(t *testing.T) {
 	if err != nil {
 		t.Error(err)
 	}
-	err = account.Verify(email, message.Content.Headers.Subject[0])
+	err = account.Verify(email, message.Subject())
 	if err != nil {
 		t.Error(err)
 	}
@@ -65,7 +65,7 @@ func TestAccountCreateAndVerify(t *testing.T) {
 
 func findToMessage(messages gohog.Messages, to string) (gohog.Message, error) {
 	for _, m := range messages.Items {
-		if m.Content.Headers.To[0] == to {
+		if m.ToAddresses()[0] == to {
 			return m, nil
 		}
 	}
