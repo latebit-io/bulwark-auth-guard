@@ -1,15 +1,17 @@
-package guard
+package bulwark
 
 import "net/http"
 
 type Guard struct {
-	Account *Account
-	baseUrl string
+	Account      *Account
+	Authenticate *Authenticate
+	baseUrl      string
 }
 
-func NewGuard(baseUrl string, client http.Client) *Guard {
+func NewGuard(baseUrl string, client *http.Client) *Guard {
 	return &Guard{
-		Account: NewAccountClient(baseUrl, &client),
-		baseUrl: baseUrl,
+		Account:      NewAccountClient(baseUrl, client),
+		Authenticate: NewAuthenticateClient(baseUrl, client),
+		baseUrl:      baseUrl,
 	}
 }

@@ -1,4 +1,4 @@
-package guard
+package bulwark
 
 type JsonError struct {
 	Title  string `json:"title"`

@@ -1,10 +1,9 @@
-package guard_test
+package bulwark
 
 import (
 	"errors"
 	"fmt"
 	"github.com/google/uuid"
-	"github.com/latebitflip-io/bulwark-auth-guard"
 	"github.com/latebitflip-io/go-hog"
 	"net/http"
 	"testing"
@@ -16,8 +15,8 @@ const mailHogUri = "http://localhost:8025"
 func TestAccountCreate(t *testing.T) {
 	client := &http.Client{}
 	id := uuid.New()
-	account := guard.NewAccountClient(baseUri, client)
-	err := account.Create(fmt.Sprintf("%s@bulwark.io", id.String()), "password12!P")
+	guard := NewGuard(baseUri, client)
+	err := guard.Account.Create(fmt.Sprintf("%s@bulwark.io", id.String()), "password12!P")
 	if err != nil {
 		t.Error(err)
 	}
@@ -26,13 +25,13 @@ func TestAccountCreate(t *testing.T) {
 func TestAccountCreateDuplicate(t *testing.T) {
 	client := &http.Client{}
 	id := uuid.New()
-	account := guard.NewAccountClient(baseUri, client)
-	err := account.Create(fmt.Sprintf("%s@bulwark.io", id.String()), "password12!P")
+	guard := NewGuard(baseUri, client)
+	err := guard.Account.Create(fmt.Sprintf("%s@bulwark.io", id.String()), "password12!P")
 	if err != nil {
 		t.Error(err)
 	}
 
-	err = account.Create(fmt.Sprintf("%s@bulwark.io", id.String()), "password12!P")
+	err = guard.Account.Create(fmt.Sprintf("%s@bulwark.io", id.String()), "password12!P")
 	if err == nil {
 		t.Error(err)
 	}
@@ -42,8 +41,8 @@ func TestAccountCreateAndVerify(t *testing.T) {
 	client := &http.Client{}
 	id := uuid.New()
 	email := fmt.Sprintf("%s@bulwark.io", id.String())
-	account := guard.NewAccountClient(baseUri, client)
-	err := account.Create(email, "password12!P")
+	guard := NewGuard(baseUri, client)
+	err := guard.Account.Create(email, "password12!P")
 	if err != nil {
 		t.Error(err)
 	}
@@ -56,7 +55,7 @@ func TestAccountCreateAndVerify(t *testing.T) {
 	if err != nil {
 		t.Error(err)
 	}
-	err = account.Verify(email, message.Subject())
+	err = guard.Account.Verify(email, message.Subject())
 	if err != nil {
 		t.Error(err)
 	}
