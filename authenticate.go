@@ -16,7 +16,8 @@ type Authenticate struct {
 }
 
 const (
-	passwordUrl = "authentication/authenticate"
+	passwordUrl    = "authentication/authenticate"
+	acknowledgeUrl = "authentication/acknowledge"
 )
 
 func NewAuthenticateClient(baseUrl string, client *http.Client) *Authenticate {
@@ -35,15 +36,32 @@ func (a *Authenticate) Password(email, password string) (Authenticated, error) {
 		Email:    email,
 		Password: password,
 	}
-	err := doPost(fmt.Sprintf("%s/%s", a.baseUrl, passwordUrl), payload, authenticated, a.client)
+	err := doPost(fmt.Sprintf("%s/%s", a.baseUrl, passwordUrl), payload, &authenticated, a.client)
 
 	if err != nil {
-		return authenticated, err
+		return Authenticated{}, err
 	}
 
 	return authenticated, nil
 }
 
 func (a *Authenticate) Acknowledge(authenticated Authenticated, email, deviceId string) error {
+	payload := struct {
+		Email        string `json:"email"`
+		DeviceId     string `json:"deviceId"`
+		AccessToken  string `json:"accessToken"`
+		RefreshToken string `json:"refreshToken"`
+	}{
+		Email:        email,
+		DeviceId:     deviceId,
+		AccessToken:  authenticated.AccessToken,
+		RefreshToken: authenticated.RefreshToken,
+	}
+
+	err := doPost(fmt.Sprintf("%s/%s", a.baseUrl, acknowledgeUrl), payload, nil, a.client)
+	if err != nil {
+		return err
+	}
+
 	return nil
 }

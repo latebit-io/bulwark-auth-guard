@@ -14,10 +14,10 @@ func doPost(url string, payload interface{}, model interface{}, client *http.Cli
 	}
 
 	resp, err := client.Post(url, "application/json", bytes.NewBuffer(jsonData))
-
 	if err != nil {
 		return err
 	}
+	defer resp.Body.Close()
 
 	if resp.StatusCode >= 300 {
 		jsonError := &JsonError{}
@@ -29,13 +29,11 @@ func doPost(url string, payload interface{}, model interface{}, client *http.Cli
 		}
 	}
 
-	if resp.Body != http.NoBody {
+	if resp.Body != http.NoBody && model != nil {
 		if err := json.NewDecoder(resp.Body).Decode(model); err != nil {
 			return err
 		}
 	}
-
-	defer resp.Body.Close()
 
 	return nil
 }
