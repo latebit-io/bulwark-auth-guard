@@ -1,19 +1,21 @@
 package bulwark
 
 import (
+	"context"
 	"fmt"
 	"net/http"
 )
 
-// Account struct is the base for account tasks
+// Account is used for account bulwark-auth tasks, but it's preferable to use it via the Guard struct.
 type Account struct {
 	client  *http.Client
 	baseURL string
 }
 
 const (
-	createUrl = "accounts/create"
-	verifyUrl = "accounts/verify"
+	createUrl         = "accounts/create"
+	verifyUrl         = "accounts/verify"
+	changePasswordUrl = "accounts/password"
 )
 
 // NewAccountClient creates a client for account tasks
@@ -25,7 +27,7 @@ func NewAccountClient(baseURL string, client *http.Client) *Account {
 }
 
 // Create will create a user account and send a verification email
-func (a Account) Create(email, password string) error {
+func (a Account) Create(ctx context.Context, email, password string) error {
 	payload := struct {
 		Email    string `json:"email"`
 		Password string `json:"password"`
@@ -34,7 +36,26 @@ func (a Account) Create(email, password string) error {
 		Password: password,
 	}
 
-	err := doPost(fmt.Sprintf("%s/%s", a.baseURL, createUrl), payload,
+	err := doPost(ctx, fmt.Sprintf("%s/%s", a.baseURL, createUrl), payload, nil, a.client)
+
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+// Verify will verify a account with a verification token supplied via email
+func (a Account) Verify(ctx context.Context, email, verificationToken string) error {
+	payload := struct {
+		Email string `json:"email"`
+		Token string `json:"token"`
+	}{
+		Email: email,
+		Token: verificationToken,
+	}
+
+	err := doPost(ctx, fmt.Sprintf("%s/%s", a.baseURL, verifyUrl), payload,
 		nil, a.client)
 
 	if err != nil {
@@ -44,18 +65,18 @@ func (a Account) Create(email, password string) error {
 	return nil
 }
 
-// Verify will verify a account
-func (a Account) Verify(email, verificationToken string) error {
+// ChangePassword changes a password for an account, valid access token is required
+func (a Account) ChangePassword(ctx context.Context, email, newPassword, accessToken string) error {
 	payload := struct {
-		Email string `json:"email"`
-		Token string `json:"token"`
+		Email       string `json:"email"`
+		NewPassword string `json:"newPassword"`
+		AccessToken string `json:"accessToken"`
 	}{
-		Email: email,
-		Token: verificationToken,
+		Email:       email,
+		AccessToken: accessToken,
+		NewPassword: newPassword,
 	}
-
-	err := doPost(fmt.Sprintf("%s/%s", a.baseURL, verifyUrl), payload,
-		nil, a.client)
+	err := doPut(ctx, fmt.Sprintf("%s/%s", a.baseURL, changePasswordUrl), payload, a.client)
 
 	if err != nil {
 		return err

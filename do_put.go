@@ -8,12 +8,13 @@ import (
 	"net/http"
 )
 
-func doPost(ctx context.Context, url string, payload interface{}, model interface{}, client *http.Client) error {
+func doPut(ctx context.Context, url string, payload interface{}, client *http.Client) error {
 	jsonData, err := json.Marshal(payload)
 	if err != nil {
 		return err
 	}
-	req, err := http.NewRequestWithContext(ctx, http.MethodPost, url, bytes.NewBuffer(jsonData))
+
+	req, err := http.NewRequestWithContext(ctx, http.MethodPut, url, bytes.NewBuffer(jsonData))
 	if err != nil {
 		return err
 	}
@@ -22,23 +23,20 @@ func doPost(ctx context.Context, url string, payload interface{}, model interfac
 	resp, err := client.Do(req)
 
 	if err != nil {
-		return err
+		return fmt.Errorf("failed to execute request: %w", err)
 	}
+
 	defer resp.Body.Close()
 
 	if resp.StatusCode >= 300 {
 		jsonError := &JsonError{}
+
 		if err := json.NewDecoder(resp.Body).Decode(jsonError); err != nil {
 			return err
 		}
+
 		if jsonError != nil {
 			return fmt.Errorf("%s - %s", jsonError.Title, jsonError.Detail)
-		}
-	}
-
-	if resp.Body != http.NoBody && model != nil {
-		if err := json.NewDecoder(resp.Body).Decode(model); err != nil {
-			return err
 		}
 	}
 

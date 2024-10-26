@@ -1,6 +1,7 @@
 package bulwark
 
 import (
+	"context"
 	"errors"
 	"fmt"
 	"github.com/google/uuid"
@@ -16,7 +17,8 @@ func TestAccountCreate(t *testing.T) {
 	client := &http.Client{}
 	id := uuid.New()
 	guard := NewGuard(baseUri, client)
-	err := guard.Account.Create(fmt.Sprintf("%s@bulwark.io", id.String()), "password12!P")
+	ctx := context.Background()
+	err := guard.Account.Create(ctx, fmt.Sprintf("%s@bulwark.io", id.String()), "password12!P")
 	if err != nil {
 		t.Error(err)
 	}
@@ -26,12 +28,13 @@ func TestAccountCreateDuplicate(t *testing.T) {
 	client := &http.Client{}
 	id := uuid.New()
 	guard := NewGuard(baseUri, client)
-	err := guard.Account.Create(fmt.Sprintf("%s@bulwark.io", id.String()), "password12!P")
+	ctx := context.Background()
+	err := guard.Account.Create(ctx, fmt.Sprintf("%s@bulwark.io", id.String()), "password12!P")
 	if err != nil {
 		t.Error(err)
 	}
 
-	err = guard.Account.Create(fmt.Sprintf("%s@bulwark.io", id.String()), "password12!P")
+	err = guard.Account.Create(ctx, fmt.Sprintf("%s@bulwark.io", id.String()), "password12!P")
 	if err == nil {
 		t.Error(err)
 	}
@@ -42,7 +45,8 @@ func TestAccountCreateAndVerify(t *testing.T) {
 	id := uuid.New()
 	email := fmt.Sprintf("%s@bulwark.io", id.String())
 	guard := NewGuard(baseUri, client)
-	err := guard.Account.Create(email, "password12!P")
+	ctx := context.Background()
+	err := guard.Account.Create(ctx, email, "password12!P")
 	if err != nil {
 		t.Error(err)
 	}
@@ -55,10 +59,31 @@ func TestAccountCreateAndVerify(t *testing.T) {
 	if err != nil {
 		t.Error(err)
 	}
-	err = guard.Account.Verify(email, message.Subject())
+	err = guard.Account.Verify(ctx, email, message.Subject())
 	if err != nil {
 		t.Error(err)
 	}
+
+	authenticated, err := guard.Authenticate.Password(ctx, email, "password12!P")
+	if err != nil {
+		t.Error(err)
+	}
+
+	err = guard.Authenticate.Acknowledge(ctx, authenticated, email, "deviceId")
+	if err != nil {
+		t.Error(err)
+	}
+
+	err = guard.Account.ChangePassword(ctx, email, "newPassword12!P", authenticated.AccessToken)
+	if err != nil {
+		t.Error(err)
+	}
+
+	authenticated, err = guard.Authenticate.Password(ctx, email, "newPassword12!P")
+	if err != nil {
+		t.Error(err)
+	}
+
 	err = gohog.DeleteAll()
 }
 

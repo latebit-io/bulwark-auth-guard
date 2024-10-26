@@ -1,6 +1,7 @@
 package bulwark
 
 import (
+	"context"
 	"fmt"
 	"github.com/google/uuid"
 	gohog "github.com/latebitflip-io/go-hog"
@@ -14,12 +15,13 @@ func TestAuthenticatePassword(t *testing.T) {
 	email := fmt.Sprintf("%s@bulwark.io", id.String())
 	password := "password12!P"
 	guard := NewGuard(baseUri, client)
-	err := createAndVerifyAccount(email, password, guard, client)
+	ctx := context.Background()
+	err := createAndVerifyAccount(ctx, email, password, guard, client)
 	if err != nil {
 		t.Error(err)
 	}
 
-	authenticated, err := guard.Authenticate.Password(email, password)
+	authenticated, err := guard.Authenticate.Password(ctx, email, password)
 	if err != nil {
 		t.Error(err)
 	}
@@ -28,14 +30,14 @@ func TestAuthenticatePassword(t *testing.T) {
 		t.Error("Token not returned")
 	}
 
-	err = guard.Authenticate.Acknowledge(authenticated, email, "testdevice")
+	err = guard.Authenticate.Acknowledge(ctx, authenticated, email, "testdevice")
 	if err != nil {
 		t.Error(err)
 	}
 }
 
-func createAndVerifyAccount(email, password string, guard *Guard, client *http.Client) error {
-	err := guard.Account.Create(email, password)
+func createAndVerifyAccount(ctx context.Context, email, password string, guard *Guard, client *http.Client) error {
+	err := guard.Account.Create(ctx, email, password)
 	if err != nil {
 		return err
 	}
@@ -48,7 +50,7 @@ func createAndVerifyAccount(email, password string, guard *Guard, client *http.C
 	if err != nil {
 		return err
 	}
-	err = guard.Account.Verify(email, message.Subject())
+	err = guard.Account.Verify(ctx, email, message.Subject())
 	if err != nil {
 		return err
 	}

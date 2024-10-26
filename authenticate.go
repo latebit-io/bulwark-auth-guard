@@ -1,15 +1,18 @@
 package bulwark
 
 import (
+	"context"
 	"fmt"
 	"net/http"
 )
 
+// Authenticated returned on successful authentication and should be acknowledged
 type Authenticated struct {
 	AccessToken  string `json:"accessToken"`
 	RefreshToken string `json:"refreshToken"`
 }
 
+// Authenticate is used for authentication bulwark-auth tasks, but it's preferable to use it via the Guard struct.
 type Authenticate struct {
 	client  *http.Client
 	baseUrl string
@@ -20,6 +23,7 @@ const (
 	acknowledgeUrl = "authentication/acknowledge"
 )
 
+// NewAuthenticateClient creates a client for account tasks
 func NewAuthenticateClient(baseUrl string, client *http.Client) *Authenticate {
 	return &Authenticate{
 		client:  client,
@@ -27,7 +31,8 @@ func NewAuthenticateClient(baseUrl string, client *http.Client) *Authenticate {
 	}
 }
 
-func (a *Authenticate) Password(email, password string) (Authenticated, error) {
+// Password traditional authentication by email and password
+func (a *Authenticate) Password(ctx context.Context, email, password string) (Authenticated, error) {
 	authenticated := Authenticated{}
 	payload := struct {
 		Email    string `json:"email"`
@@ -36,7 +41,7 @@ func (a *Authenticate) Password(email, password string) (Authenticated, error) {
 		Email:    email,
 		Password: password,
 	}
-	err := doPost(fmt.Sprintf("%s/%s", a.baseUrl, passwordUrl), payload, &authenticated, a.client)
+	err := doPost(ctx, fmt.Sprintf("%s/%s", a.baseUrl, passwordUrl), payload, &authenticated, a.client)
 
 	if err != nil {
 		return Authenticated{}, err
@@ -45,7 +50,8 @@ func (a *Authenticate) Password(email, password string) (Authenticated, error) {
 	return authenticated, nil
 }
 
-func (a *Authenticate) Acknowledge(authenticated Authenticated, email, deviceId string) error {
+// Acknowledge notifies the server a token is in use, this should be done after each authentication
+func (a *Authenticate) Acknowledge(ctx context.Context, authenticated Authenticated, email, deviceId string) error {
 	payload := struct {
 		Email        string `json:"email"`
 		DeviceId     string `json:"deviceId"`
@@ -58,7 +64,7 @@ func (a *Authenticate) Acknowledge(authenticated Authenticated, email, deviceId 
 		RefreshToken: authenticated.RefreshToken,
 	}
 
-	err := doPost(fmt.Sprintf("%s/%s", a.baseUrl, acknowledgeUrl), payload, nil, a.client)
+	err := doPost(ctx, fmt.Sprintf("%s/%s", a.baseUrl, acknowledgeUrl), payload, nil, a.client)
 	if err != nil {
 		return err
 	}
