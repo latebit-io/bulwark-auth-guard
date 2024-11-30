@@ -1,4 +1,4 @@
-module github.com/latebitflip-io/bulwark-auth-guard
+module github.com/latebit-io/bulwark-auth-guard
 
 go 1.23.0
 
