@@ -19,8 +19,10 @@ type Authenticate struct {
 }
 
 const (
-	passwordUrl    = "authentication/authenticate"
-	acknowledgeUrl = "authentication/acknowledge"
+	passwordUrl         = "authentication/authenticate"
+	acknowledgeUrl      = "authentication/acknowledge"
+	requestMagicCodeUrl = "passwordless/magic/request"
+	magicCodeUrl        = "passwordless/magic/authenticate"
 )
 
 // NewAuthenticateClient creates a client for account tasks
@@ -70,4 +72,36 @@ func (a *Authenticate) Acknowledge(ctx context.Context, authenticated Authentica
 	}
 
 	return nil
+}
+
+// RequestMagicCode will send an email with a magic code link
+func (a *Authenticate) RequestMagicCode(ctx context.Context, email string) error {
+	resp, err := a.client.Get(fmt.Sprintf("%s/%s/%s", a.baseUrl, requestMagicCodeUrl, email))
+	if err != nil {
+		return err
+	}
+
+	if resp.StatusCode != 204 {
+		return fmt.Errorf("unexpected status code: %d", resp.StatusCode)
+	}
+	return nil
+}
+
+// MagicCode authenticates a user with email and a magic code
+func (a *Authenticate) MagicCode(ctx context.Context, email, magicCode string) (Authenticated, error) {
+	authenticated := Authenticated{}
+	payload := struct {
+		Email string `json:"email"`
+		Code  string `json:"code"`
+	}{
+		Email: email,
+		Code:  magicCode,
+	}
+
+	err := doPost(ctx, fmt.Sprintf("%s/%s", a.baseUrl, magicCodeUrl), payload, &authenticated, a.client)
+	if err != nil {
+		return Authenticated{}, err
+	}
+
+	return authenticated, nil
 }
