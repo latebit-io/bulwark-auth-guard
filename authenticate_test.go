@@ -4,7 +4,7 @@ import (
 	"context"
 	"fmt"
 	"github.com/google/uuid"
-	gohog "github.com/latebitflip-io/go-hog"
+	gohog "github.com/latebit-io/go-hog"
 	"net/http"
 	"testing"
 )
@@ -76,6 +76,18 @@ func TestAuthenticateMagicCode(t *testing.T) {
 	err = guard.Authenticate.Acknowledge(ctx, authenticated, email, "testdevice")
 	if err != nil {
 		t.Error(err)
+	}
+
+}
+
+func TestAuthenticateMagicCodeFail(t *testing.T) {
+	email := "test9090909@latebit.io"
+	client := &http.Client{}
+	guard := NewGuard(baseUri, client)
+	ctx := context.Background()
+	err := guard.Authenticate.RequestMagicCode(ctx, email)
+	if err == nil {
+		t.Error("should throw an magic link error")
 	}
 
 }

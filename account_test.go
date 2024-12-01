@@ -5,7 +5,7 @@ import (
 	"errors"
 	"fmt"
 	"github.com/google/uuid"
-	"github.com/latebitflip-io/go-hog"
+	gohog "github.com/latebit-io/go-hog"
 	"net/http"
 	"testing"
 )

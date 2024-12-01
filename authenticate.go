@@ -2,6 +2,7 @@ package bulwark
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
 	"net/http"
 )
@@ -82,7 +83,13 @@ func (a *Authenticate) RequestMagicCode(ctx context.Context, email string) error
 	}
 
 	if resp.StatusCode != 204 {
-		return fmt.Errorf("unexpected status code: %d", resp.StatusCode)
+		jsonError := &JsonError{}
+		if err := json.NewDecoder(resp.Body).Decode(jsonError); err != nil {
+			return err
+		}
+		if jsonError != nil {
+			return fmt.Errorf("%s - %s", jsonError.Title, jsonError.Detail)
+		}
 	}
 	return nil
 }
