@@ -4,10 +4,11 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"github.com/google/uuid"
-	gohog "github.com/latebit-io/go-hog"
 	"net/http"
 	"testing"
+
+	"github.com/google/uuid"
+	gohog "github.com/latebit-io/go-hog"
 )
 
 const baseUri = "http://localhost:8080"
@@ -85,6 +86,9 @@ func TestAccountCreateAndVerify(t *testing.T) {
 	}
 
 	err = gohog.DeleteAll()
+	if err != nil {
+		fmt.Println(err)
+	}
 }
 
 func findToMessage(messages gohog.Messages, to string) (gohog.Message, error) {

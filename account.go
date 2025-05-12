@@ -13,9 +13,9 @@ type Account struct {
 }
 
 const (
-	createUrl         = "accounts/create"
-	verifyUrl         = "accounts/verify"
-	changePasswordUrl = "accounts/password"
+	createUrl         = "api/accounts"
+	verifyUrl         = "api/accounts/verify"
+	changePasswordUrl = "api/accounts/password"
 )
 
 // NewAccountClient creates a client for account tasks
@@ -73,8 +73,8 @@ func (a Account) ChangePassword(ctx context.Context, email, newPassword, accessT
 		AccessToken string `json:"accessToken"`
 	}{
 		Email:       email,
-		AccessToken: accessToken,
 		NewPassword: newPassword,
+		AccessToken: accessToken,
 	}
 	err := doPut(ctx, fmt.Sprintf("%s/%s", a.baseURL, changePasswordUrl), payload, a.client)
 

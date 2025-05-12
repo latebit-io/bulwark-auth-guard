@@ -2,7 +2,6 @@ package bulwark
 
 import (
 	"context"
-	"encoding/json"
 	"fmt"
 	"net/http"
 )
@@ -20,10 +19,10 @@ type Authenticate struct {
 }
 
 const (
-	passwordUrl         = "authentication/authenticate"
-	acknowledgeUrl      = "authentication/acknowledge"
-	requestMagicCodeUrl = "passwordless/magic/request"
-	magicCodeUrl        = "passwordless/magic/authenticate"
+	passwordUrl         = "api/authenticate"
+	acknowledgeUrl      = "api/authenticate/ack"
+	requestMagicCodeUrl = "api/authenticate/logon/request"
+	magicCodeUrl        = "api/authenticate/code"
 )
 
 // NewAuthenticateClient creates a client for account tasks
@@ -77,20 +76,17 @@ func (a *Authenticate) Acknowledge(ctx context.Context, authenticated Authentica
 
 // RequestMagicCode will send an email with a magic code link
 func (a *Authenticate) RequestMagicCode(ctx context.Context, email string) error {
-	resp, err := a.client.Get(fmt.Sprintf("%s/%s/%s", a.baseUrl, requestMagicCodeUrl, email))
+	payload := struct {
+		Email string `json:"email"`
+	}{
+		Email: email,
+	}
+
+	err := doPost(ctx, fmt.Sprintf("%s/%s", a.baseUrl, requestMagicCodeUrl), payload, nil, a.client)
 	if err != nil {
 		return err
 	}
 
-	if resp.StatusCode != 204 {
-		jsonError := &JsonError{}
-		if err := json.NewDecoder(resp.Body).Decode(jsonError); err != nil {
-			return err
-		}
-		if jsonError != nil {
-			return fmt.Errorf("%s - %s", jsonError.Title, jsonError.Detail)
-		}
-	}
 	return nil
 }
 
