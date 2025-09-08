@@ -4,12 +4,24 @@ import (
 	"context"
 	"fmt"
 	"net/http"
+	"time"
 )
 
 // Authenticated returned on successful authentication and should be acknowledged
 type Authenticated struct {
 	AccessToken  string `json:"accessToken"`
 	RefreshToken string `json:"refreshToken"`
+}
+
+type AccessTokenClaims struct {
+	Roles     []string  `json:"roles"`
+	Issuer    string    `json:"issuer"`
+	Subject   string    `json:"subject"`
+	Audience  string    `json:"audience"`
+	ExpiresAt time.Time `json:"expiresAT"`
+	NotBefore time.Time `json:"notBefore"`
+	IssuedAt  time.Time `json:"issuedAt"`
+	ID        string    `json:"Id,omitempty"`
 }
 
 // Authenticate is used for authentication bulwark-auth tasks, but it's preferable to use it via the Guard struct.
@@ -23,6 +35,7 @@ const (
 	acknowledgeUrl      = "api/authenticate/ack"
 	requestMagicCodeUrl = "api/authenticate/logon/request"
 	magicCodeUrl        = "api/authenticate/code"
+	validateAccessToken = "api/authenticate/token/validate"
 )
 
 // NewAuthenticateClient creates a client for account tasks
@@ -107,4 +120,23 @@ func (a *Authenticate) MagicCode(ctx context.Context, email, magicCode string) (
 	}
 
 	return authenticated, nil
+}
+
+func (a *Authenticate) ValidateAccessToken(ctx context.Context, email, accessToken, deviceId string) (AccessTokenClaims, error) {
+	claims := AccessTokenClaims{}
+	payload := struct {
+		Email    string `json:"email"`
+		ClientId string `json:"clientId"`
+		Token    string `json:"token"`
+	}{
+		Email:    email,
+		ClientId: deviceId,
+		Token:    accessToken,
+	}
+
+	err := doPost(ctx, fmt.Sprintf("%s/%s", a.baseUrl, validateAccessToken), payload, &claims, a.client)
+	if err != nil {
+		return claims, err
+	}
+	return claims, nil
 }
