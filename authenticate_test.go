@@ -3,10 +3,11 @@ package bulwark
 import (
 	"context"
 	"fmt"
-	"github.com/google/uuid"
-	gohog "github.com/latebit-io/go-hog"
 	"net/http"
 	"testing"
+
+	"github.com/google/uuid"
+	gohog "github.com/latebit-io/go-hog"
 )
 
 func TestAuthenticatePassword(t *testing.T) {
@@ -33,6 +34,15 @@ func TestAuthenticatePassword(t *testing.T) {
 	err = guard.Authenticate.Acknowledge(ctx, authenticated, email, "testdevice")
 	if err != nil {
 		t.Error(err)
+	}
+
+	claims, err := guard.Authenticate.ValidateAccessToken(ctx, email, authenticated.AccessToken, "testdevice")
+	if err != nil {
+		t.Error(err)
+	}
+	
+	if claims.Subject != email {
+		t.Error("Subject does not match email")
 	}
 }
 
