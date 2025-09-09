@@ -18,7 +18,7 @@ type AccessTokenClaims struct {
 	Issuer    string    `json:"issuer"`
 	Subject   string    `json:"subject"`
 	Audience  string    `json:"audience"`
-	ExpiresAt time.Time `json:"expiresAT"`
+	ExpiresAt time.Time `json:"expiresAt"`
 	NotBefore time.Time `json:"notBefore"`
 	IssuedAt  time.Time `json:"issuedAt"`
 	ID        string    `json:"Id,omitempty"`
