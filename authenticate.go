@@ -31,11 +31,12 @@ type Authenticate struct {
 }
 
 const (
-	passwordUrl         = "api/authenticate"
-	acknowledgeUrl      = "api/authenticate/ack"
-	requestMagicCodeUrl = "api/authenticate/logon/request"
-	magicCodeUrl        = "api/authenticate/code"
-	validateAccessToken = "api/authenticate/token/validate"
+	passwordUrl            = "api/authenticate"
+	acknowledgeUrl         = "api/authenticate/ack"
+	requestMagicCodeUrl    = "api/authenticate/logon/request"
+	magicCodeUrl           = "api/authenticate/code"
+	validateAccessTokenUrl = "api/authenticate/token/validate"
+	renewUrl               = "api/authenticate/renew"
 )
 
 // NewAuthenticateClient creates a client for account tasks
@@ -134,9 +135,25 @@ func (a *Authenticate) ValidateAccessToken(ctx context.Context, email, accessTok
 		Token:    accessToken,
 	}
 
-	err := doPost(ctx, fmt.Sprintf("%s/%s", a.baseUrl, validateAccessToken), payload, &claims, a.client)
+	err := doPost(ctx, fmt.Sprintf("%s/%s", a.baseUrl, validateAccessTokenUrl), payload, &claims, a.client)
 	if err != nil {
 		return claims, err
 	}
 	return claims, nil
+}
+
+func (a *Authenticate) Renew(ctx context.Context, email, refreshToken string) (Authenticated, error) {
+	authenticated := Authenticated{}
+	payload := struct {
+		Email        string `json:"email"`
+		RefreshToken string `json:"refreshToken"`
+	}{
+		Email:        email,
+		RefreshToken: refreshToken,
+	}
+	err := doPost(ctx, fmt.Sprintf("%s/%s", a.baseUrl, renewUrl), payload, &authenticated, a.client)
+	if err != nil {
+		return Authenticated{}, err
+	}
+	return authenticated, nil
 }
