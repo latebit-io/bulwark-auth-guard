@@ -40,9 +40,16 @@ func TestAuthenticatePassword(t *testing.T) {
 	if err != nil {
 		t.Error(err)
 	}
-	
+
 	if claims.Subject != email {
 		t.Error("Subject does not match email")
+	}
+
+	authenticated, err = guard.Authenticate.Renew(ctx, claims.Subject, authenticated.RefreshToken)
+	claims, err = guard.Authenticate.ValidateAccessToken(ctx, email, authenticated.AccessToken, "testdevice")
+
+	if claims.Subject != email {
+		t.Error("Refresh Token does not match email")
 	}
 }
 
