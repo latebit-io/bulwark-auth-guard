@@ -67,15 +67,15 @@ func (a *Authenticate) Password(ctx context.Context, email, password string) (Au
 }
 
 // Acknowledge notifies the server a token is in use, this should be done after each authentication
-func (a *Authenticate) Acknowledge(ctx context.Context, authenticated Authenticated, email, deviceId string) error {
+func (a *Authenticate) Acknowledge(ctx context.Context, authenticated Authenticated, email, clientID string) error {
 	payload := struct {
 		Email        string `json:"email"`
-		DeviceId     string `json:"deviceId"`
+		ClientId     string `json:"clientId"`
 		AccessToken  string `json:"accessToken"`
 		RefreshToken string `json:"refreshToken"`
 	}{
 		Email:        email,
-		DeviceId:     deviceId,
+		ClientId:     clientID,
 		AccessToken:  authenticated.AccessToken,
 		RefreshToken: authenticated.RefreshToken,
 	}
