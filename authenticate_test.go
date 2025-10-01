@@ -10,7 +10,9 @@ import (
 	gohog "github.com/latebit-io/go-hog"
 )
 
-func TestAuthenticatePassword(t *testing.T) {
+const clientID = "testdevice"
+
+func TestAuthenticatePasswordFlow(t *testing.T) {
 	client := &http.Client{}
 	id := uuid.New()
 	email := fmt.Sprintf("%s@bulwark.io", id.String())
@@ -31,12 +33,12 @@ func TestAuthenticatePassword(t *testing.T) {
 		t.Error("Token not returned")
 	}
 
-	err = guard.Authenticate.Acknowledge(ctx, authenticated, email, "testdevice")
+	err = guard.Authenticate.Acknowledge(ctx, authenticated, email, clientID)
 	if err != nil {
 		t.Error(err)
 	}
 
-	claims, err := guard.Authenticate.ValidateAccessToken(ctx, email, authenticated.AccessToken, "testdevice")
+	claims, err := guard.Authenticate.ValidateAccessToken(ctx, email, authenticated.AccessToken, clientID)
 	if err != nil {
 		t.Error(err)
 	}
@@ -46,10 +48,15 @@ func TestAuthenticatePassword(t *testing.T) {
 	}
 
 	authenticated, err = guard.Authenticate.Renew(ctx, claims.Subject, authenticated.RefreshToken)
-	claims, err = guard.Authenticate.ValidateAccessToken(ctx, email, authenticated.AccessToken, "testdevice")
+	claims, err = guard.Authenticate.ValidateAccessToken(ctx, email, authenticated.AccessToken, clientID)
 
 	if claims.Subject != email {
 		t.Error("Refresh Token does not match email")
+	}
+
+	err = guard.Authenticate.Revoke(ctx, email, authenticated.AccessToken, clientID)
+	if err != nil {
+		t.Error(err)
 	}
 }
 
