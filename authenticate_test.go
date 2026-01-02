@@ -24,7 +24,7 @@ func TestAuthenticatePasswordFlow(t *testing.T) {
 		t.Error(err)
 	}
 	deviceID := fmt.Sprintf("iPhone13%s", id.String())
-	authenticated, err := guard.Authenticate.Password(ctx, email, deviceID, password)
+	authenticated, err := guard.Authenticate.Password(ctx, email, password, deviceID)
 	if err != nil {
 		t.Error(err)
 	}
@@ -89,7 +89,7 @@ func TestAuthenticateMagicCode(t *testing.T) {
 	fmt.Printf("Message: %s\n", message.Subject())
 
 	deviceID := fmt.Sprintf("iPhone13%s", id.String())
-	authenticated, err := guard.Authenticate.MagicCode(ctx, email, deviceID, code)
+	authenticated, err := guard.Authenticate.MagicCode(ctx, email, code, deviceID)
 	if err != nil {
 		t.Error(err)
 	}

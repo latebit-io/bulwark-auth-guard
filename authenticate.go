@@ -21,7 +21,7 @@ type AccessTokenClaims struct {
 	ExpiresAt time.Time `json:"expiresAt"`
 	NotBefore time.Time `json:"notBefore"`
 	IssuedAt  time.Time `json:"issuedAt"`
-	ID        string    `json:"Id,omitempty"`
+	ID        string    `json:"id,omitempty"`
 	ClientID  string    `json:"clientId,omitempty"`
 }
 
@@ -50,7 +50,7 @@ func NewAuthenticateClient(baseUrl string, client *http.Client) *Authenticate {
 }
 
 // Password traditional authentication by email and password
-func (a *Authenticate) Password(ctx context.Context, email, clientID, password string) (Authenticated, error) {
+func (a *Authenticate) Password(ctx context.Context, email, password, clientID string) (Authenticated, error) {
 	authenticated := Authenticated{}
 	payload := struct {
 		Email    string `json:"email"`
@@ -105,7 +105,7 @@ func (a *Authenticate) RequestMagicCode(ctx context.Context, email string) error
 }
 
 // MagicCode authenticates a user with email and a magic code
-func (a *Authenticate) MagicCode(ctx context.Context, email, clientID, magicCode string) (Authenticated, error) {
+func (a *Authenticate) MagicCode(ctx context.Context, email, magicCode, clientID string) (Authenticated, error) {
 	authenticated := Authenticated{}
 	payload := struct {
 		Email    string `json:"email"`
