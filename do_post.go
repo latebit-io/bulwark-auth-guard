@@ -31,9 +31,7 @@ func doPost(ctx context.Context, url string, payload interface{}, model interfac
 		if err := json.NewDecoder(resp.Body).Decode(jsonError); err != nil {
 			return err
 		}
-		if jsonError != nil {
-			return fmt.Errorf("%s - %s", jsonError.Title, jsonError.Detail)
-		}
+		return fmt.Errorf("%s - %s", jsonError.Title, jsonError.Detail)
 	}
 
 	if resp.Body != http.NoBody && model != nil {

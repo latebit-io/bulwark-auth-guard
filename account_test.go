@@ -64,13 +64,13 @@ func TestAccountCreateAndVerify(t *testing.T) {
 	if err != nil {
 		t.Error(err)
 	}
-
-	authenticated, err := guard.Authenticate.Password(ctx, email, "password12!P")
+	deviceID := fmt.Sprintf("iPhone13%s", id.String())
+	authenticated, err := guard.Authenticate.Password(ctx, email, "password12!P", deviceID)
 	if err != nil {
 		t.Error(err)
 	}
 
-	err = guard.Authenticate.Acknowledge(ctx, authenticated, email, "deviceId")
+	err = guard.Authenticate.Acknowledge(ctx, authenticated)
 	if err != nil {
 		t.Error(err)
 	}
@@ -80,7 +80,7 @@ func TestAccountCreateAndVerify(t *testing.T) {
 		t.Error(err)
 	}
 
-	authenticated, err = guard.Authenticate.Password(ctx, email, "newPassword12!P")
+	authenticated, err = guard.Authenticate.Password(ctx, email, "newPassword12!P", deviceID)
 	if err != nil {
 		t.Error(err)
 	}
