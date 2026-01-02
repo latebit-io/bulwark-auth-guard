@@ -156,20 +156,16 @@ func (a *Authenticate) Renew(ctx context.Context, email, refreshToken string) (A
 	return authenticated, nil
 }
 
-func (a *Authenticate) Revoke(ctx context.Context, email, accessToken, clientId string) error {
+func (a *Authenticate) Revoke(ctx context.Context, email, accessToken, clientID string) error {
 	payload := struct {
 		Email       string `json:"email"`
-		ClientId    string `json:"clientId"`
+		ClientID    string `json:"clientId"`
 		AccessToken string `json:"accessToken"`
 	}{
 		Email:       email,
-		ClientId:    clientId,
+		ClientID:    clientID,
 		AccessToken: accessToken,
 	}
 
-	err := doDelete(ctx, fmt.Sprintf("%s/%s", a.baseUrl, revokeUrl), payload, a.client)
-	if err != nil {
-		return err
-	}
-	return nil
+	return doDelete(ctx, fmt.Sprintf("%s/%s", a.baseUrl, revokeUrl), payload, a.client)
 }

@@ -35,9 +35,7 @@ func doDelete(ctx context.Context, url string, payload interface{}, client *http
 			return err
 		}
 
-		if jsonError != nil {
-			return fmt.Errorf("%s - %s", jsonError.Title, jsonError.Detail)
-		}
+		return fmt.Errorf("%s - %s", jsonError.Title, jsonError.Detail)
 	}
 
 	return nil
