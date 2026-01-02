@@ -23,8 +23,8 @@ func TestAuthenticatePasswordFlow(t *testing.T) {
 	if err != nil {
 		t.Error(err)
 	}
-
-	authenticated, err := guard.Authenticate.Password(ctx, email, password)
+	deviceID := fmt.Sprintf("iPhone13%s", id.String())
+	authenticated, err := guard.Authenticate.Password(ctx, email, deviceID, password)
 	if err != nil {
 		t.Error(err)
 	}
@@ -33,12 +33,12 @@ func TestAuthenticatePasswordFlow(t *testing.T) {
 		t.Error("Token not returned")
 	}
 
-	err = guard.Authenticate.Acknowledge(ctx, authenticated, email, clientID)
+	err = guard.Authenticate.Acknowledge(ctx, authenticated)
 	if err != nil {
 		t.Error(err)
 	}
 
-	claims, err := guard.Authenticate.ValidateAccessToken(ctx, email, authenticated.AccessToken, clientID)
+	claims, err := guard.Authenticate.ValidateAccessToken(ctx, authenticated.AccessToken)
 	if err != nil {
 		t.Error(err)
 	}
@@ -48,7 +48,7 @@ func TestAuthenticatePasswordFlow(t *testing.T) {
 	}
 
 	authenticated, err = guard.Authenticate.Renew(ctx, claims.Subject, authenticated.RefreshToken)
-	claims, err = guard.Authenticate.ValidateAccessToken(ctx, email, authenticated.AccessToken, clientID)
+	claims, err = guard.Authenticate.ValidateAccessToken(ctx, authenticated.AccessToken)
 
 	if claims.Subject != email {
 		t.Error("Refresh Token does not match email")
@@ -88,7 +88,8 @@ func TestAuthenticateMagicCode(t *testing.T) {
 	code := message.Subject()
 	fmt.Printf("Message: %s\n", message.Subject())
 
-	authenticated, err := guard.Authenticate.MagicCode(ctx, email, code)
+	deviceID := fmt.Sprintf("iPhone13%s", id.String())
+	authenticated, err := guard.Authenticate.MagicCode(ctx, email, deviceID, code)
 	if err != nil {
 		t.Error(err)
 	}
@@ -97,7 +98,7 @@ func TestAuthenticateMagicCode(t *testing.T) {
 		t.Error("Token not returned")
 	}
 
-	err = guard.Authenticate.Acknowledge(ctx, authenticated, email, "testdevice")
+	err = guard.Authenticate.Acknowledge(ctx, authenticated)
 	if err != nil {
 		t.Error(err)
 	}

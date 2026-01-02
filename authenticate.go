@@ -22,6 +22,7 @@ type AccessTokenClaims struct {
 	NotBefore time.Time `json:"notBefore"`
 	IssuedAt  time.Time `json:"issuedAt"`
 	ID        string    `json:"Id,omitempty"`
+	ClientID  string    `json:"clientId,omitempty"`
 }
 
 // Authenticate is used for authentication bulwark-auth tasks, but it's preferable to use it via the Guard struct.
@@ -49,14 +50,16 @@ func NewAuthenticateClient(baseUrl string, client *http.Client) *Authenticate {
 }
 
 // Password traditional authentication by email and password
-func (a *Authenticate) Password(ctx context.Context, email, password string) (Authenticated, error) {
+func (a *Authenticate) Password(ctx context.Context, email, clientID, password string) (Authenticated, error) {
 	authenticated := Authenticated{}
 	payload := struct {
 		Email    string `json:"email"`
 		Password string `json:"password"`
+		ClientID string `json:"clientId"`
 	}{
 		Email:    email,
 		Password: password,
+		ClientID: clientID,
 	}
 	err := doPost(ctx, fmt.Sprintf("%s/%s", a.baseUrl, passwordUrl), payload, &authenticated, a.client)
 
@@ -68,15 +71,11 @@ func (a *Authenticate) Password(ctx context.Context, email, password string) (Au
 }
 
 // Acknowledge notifies the server a token is in use, this should be done after each authentication
-func (a *Authenticate) Acknowledge(ctx context.Context, authenticated Authenticated, email, clientID string) error {
+func (a *Authenticate) Acknowledge(ctx context.Context, authenticated Authenticated) error {
 	payload := struct {
-		Email        string `json:"email"`
-		ClientId     string `json:"clientId"`
 		AccessToken  string `json:"accessToken"`
 		RefreshToken string `json:"refreshToken"`
 	}{
-		Email:        email,
-		ClientId:     clientID,
 		AccessToken:  authenticated.AccessToken,
 		RefreshToken: authenticated.RefreshToken,
 	}
@@ -106,14 +105,16 @@ func (a *Authenticate) RequestMagicCode(ctx context.Context, email string) error
 }
 
 // MagicCode authenticates a user with email and a magic code
-func (a *Authenticate) MagicCode(ctx context.Context, email, magicCode string) (Authenticated, error) {
+func (a *Authenticate) MagicCode(ctx context.Context, email, clientID, magicCode string) (Authenticated, error) {
 	authenticated := Authenticated{}
 	payload := struct {
-		Email string `json:"email"`
-		Code  string `json:"code"`
+		Email    string `json:"email"`
+		Code     string `json:"code"`
+		ClientID string `json:"clientId"`
 	}{
-		Email: email,
-		Code:  magicCode,
+		Email:    email,
+		Code:     magicCode,
+		ClientID: clientID,
 	}
 
 	err := doPost(ctx, fmt.Sprintf("%s/%s", a.baseUrl, magicCodeUrl), payload, &authenticated, a.client)
@@ -124,16 +125,12 @@ func (a *Authenticate) MagicCode(ctx context.Context, email, magicCode string) (
 	return authenticated, nil
 }
 
-func (a *Authenticate) ValidateAccessToken(ctx context.Context, email, accessToken, deviceId string) (AccessTokenClaims, error) {
+func (a *Authenticate) ValidateAccessToken(ctx context.Context, accessToken string) (AccessTokenClaims, error) {
 	claims := AccessTokenClaims{}
 	payload := struct {
-		Email    string `json:"email"`
-		ClientId string `json:"clientId"`
-		Token    string `json:"token"`
+		Token string `json:"token"`
 	}{
-		Email:    email,
-		ClientId: deviceId,
-		Token:    accessToken,
+		Token: accessToken,
 	}
 
 	err := doPost(ctx, fmt.Sprintf("%s/%s", a.baseUrl, validateAccessTokenUrl), payload, &claims, a.client)
