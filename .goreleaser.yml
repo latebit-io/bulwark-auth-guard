@@ -1,0 +1,84 @@
+version: 2
+
+project_name: bulwark-auth-guard
+
+# Since this is a library, we don't build binaries
+# but GoReleaser will still create releases with source archives
+builds:
+  - skip: true
+
+archives:
+  - id: default
+    name_template: >-
+      {{ .ProjectName }}_
+      {{- .Version }}_
+      {{- title .Os }}_
+      {{- if eq .Arch "amd64" }}x86_64
+      {{- else if eq .Arch "386" }}i386
+      {{- else }}{{ .Arch }}{{ end }}
+      {{- if .Arm }}v{{ .Arm }}{{ end }}
+    files:
+      - LICENSE*
+      - README*
+      - CHANGELOG*
+      - CLAUDE.md
+
+checksum:
+  name_template: "checksums.txt"
+
+changelog:
+  use: github
+  sort: asc
+  filters:
+    exclude:
+      - "^docs:"
+      - "^test:"
+      - "^chore:"
+      - "typo"
+  groups:
+    - title: Features
+      regexp: '^.*?feat(\([[:word:]]+\))??!?:.+$'
+      order: 0
+    - title: "Bug Fixes"
+      regexp: '^.*?fix(\([[:word:]]+\))??!?:.+$'
+      order: 1
+    - title: "Performance Improvements"
+      regexp: '^.*?perf(\([[:word:]]+\))??!?:.+$'
+      order: 2
+    - title: "Refactoring"
+      regexp: '^.*?refactor(\([[:word:]]+\))??!?:.+$'
+      order: 3
+    - title: "Documentation"
+      regexp: '^.*?docs?(\([[:word:]]+\))??!?:.+$'
+      order: 4
+    - title: "Build & CI"
+      regexp: '^.*?(build|ci)(\([[:word:]]+\))??!?:.+$'
+      order: 5
+    - title: Others
+      order: 999
+
+release:
+  github:
+    owner: latebit-io
+    name: bulwark-auth-guard
+  draft: false
+  prerelease: auto
+  mode: append
+  header: |
+    ## bulwark-auth-guard {{ .Tag }}
+
+    Go client library for bulwark-auth authentication service.
+
+    ### Installation
+    ```bash
+    go get github.com/latebit-io/bulwark-auth-guard@{{ .Tag }}
+    ```
+  footer: |
+    **Full Changelog**: https://github.com/latebit-io/bulwark-auth-guard/compare/{{ .PreviousTag }}...{{ .Tag }}
+
+    ---
+
+    For documentation and usage examples, see the [README](https://github.com/latebit-io/bulwark-auth-guard#readme).
+
+announce:
+  skip: true
