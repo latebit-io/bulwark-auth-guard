@@ -1,5 +1,11 @@
 .PHONY: help test test-up test-down test-run test-logs fmt vet tidy clean
 
+# Detect docker compose command (support both docker-compose and docker compose)
+DOCKER_COMPOSE := $(shell command -v docker-compose 2> /dev/null)
+ifndef DOCKER_COMPOSE
+	DOCKER_COMPOSE := docker compose
+endif
+
 # Default target
 help:
 	@echo "Available targets:"
@@ -16,7 +22,7 @@ help:
 # Full test lifecycle: start services, run tests, stop services
 test:
 	@echo "Starting test services..."
-	@docker-compose up -d
+	@$(DOCKER_COMPOSE) up -d
 	@echo "Waiting for services to be healthy..."
 	@sleep 3
 	@echo "Checking bulwark-auth readiness..."
@@ -29,14 +35,14 @@ test:
 		sleep 2; \
 	done
 	@echo "Running tests..."
-	@go test -v || (docker-compose down && exit 1)
+	@go test -v || ($(DOCKER_COMPOSE) down && exit 1)
 	@echo "Stopping test services..."
-	@docker-compose down
+	@$(DOCKER_COMPOSE) down
 
 # Start test services
 test-up:
 	@echo "Starting test services..."
-	@docker-compose up -d
+	@$(DOCKER_COMPOSE) up -d
 	@echo "Waiting for services to be healthy..."
 	@sleep 3
 	@echo "Checking bulwark-auth readiness..."
@@ -55,7 +61,7 @@ test-up:
 # Stop test services
 test-down:
 	@echo "Stopping test services..."
-	@docker-compose down
+	@$(DOCKER_COMPOSE) down
 
 # Run tests only (assumes services are already running)
 test-run:
@@ -64,7 +70,7 @@ test-run:
 
 # View logs from test services
 test-logs:
-	@docker-compose logs -f
+	@$(DOCKER_COMPOSE) logs -f
 
 # Format code
 fmt:
