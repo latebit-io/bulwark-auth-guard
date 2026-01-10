@@ -22,15 +22,24 @@ client := &http.Client{}
 guard := bulwark.NewGuard("http://localhost:8080", client)
 ```
 
+### Multi-Tenancy
+
+All operations require a `tenantID` as the first parameter after `context.Context`. This enables the library to support multi-tenant authentication systems where users and sessions are isolated by tenant.
+
+```go
+tenantID := "my-organization-id"
+```
+
 ### Account Management
 
 #### Create Account
 ```go
 ctx := context.Background()
+tenantID := "my-organization-id"
 email := "user@example.com"
 password := "securePassword123!"
 
-err := guard.Account.Create(ctx, email, password)
+err := guard.Account.Create(ctx, tenantID, email, password)
 if err != nil {
     log.Fatal(err)
 }
@@ -40,7 +49,7 @@ if err != nil {
 #### Verify Account
 ```go
 verificationToken := "token-from-email"
-err := guard.Account.Verify(ctx, email, verificationToken)
+err := guard.Account.Verify(ctx, tenantID, email, verificationToken)
 if err != nil {
     log.Fatal(err)
 }
@@ -48,7 +57,7 @@ if err != nil {
 
 #### Change Password
 ```go
-err := guard.Account.ChangePassword(ctx, email, "newPassword123!", accessToken)
+err := guard.Account.ChangePassword(ctx, tenantID, email, "newPassword123!", accessToken)
 if err != nil {
     log.Fatal(err)
 }
@@ -59,13 +68,13 @@ if err != nil {
 #### Password Authentication
 ```go
 clientID := "my-app-device-id"
-authenticated, err := guard.Authenticate.Password(ctx, email, clientID, password)
+authenticated, err := guard.Authenticate.Password(ctx, tenantID, email, password, clientID)
 if err != nil {
     log.Fatal(err)
 }
 
 // Important: Must acknowledge after authentication
-err = guard.Authenticate.Acknowledge(ctx, authenticated)
+err = guard.Authenticate.Acknowledge(ctx, tenantID, authenticated)
 if err != nil {
     log.Fatal(err)
 }
@@ -78,7 +87,7 @@ fmt.Println(authenticated.RefreshToken)
 #### Magic Code (Passwordless) Authentication
 ```go
 // Request magic code
-err := guard.Authenticate.RequestMagicCode(ctx, email)
+err := guard.Authenticate.RequestMagicCode(ctx, tenantID, email)
 if err != nil {
     log.Fatal(err)
 }
@@ -86,13 +95,13 @@ if err != nil {
 
 // Authenticate with code
 magicCode := "code-from-email"
-authenticated, err := guard.Authenticate.MagicCode(ctx, email, clientID, magicCode)
+authenticated, err := guard.Authenticate.MagicCode(ctx, tenantID, email, magicCode, clientID)
 if err != nil {
     log.Fatal(err)
 }
 
 // Important: Must acknowledge after authentication
-err = guard.Authenticate.Acknowledge(ctx, authenticated)
+err = guard.Authenticate.Acknowledge(ctx, tenantID, authenticated)
 if err != nil {
     log.Fatal(err)
 }
@@ -102,11 +111,12 @@ if err != nil {
 
 #### Validate Access Token
 ```go
-claims, err := guard.Authenticate.ValidateAccessToken(ctx, authenticated.AccessToken)
+claims, err := guard.Authenticate.ValidateAccessToken(ctx, tenantID, authenticated.AccessToken)
 if err != nil {
     log.Fatal(err)
 }
 
+fmt.Println(claims.TenantID)  // Tenant identifier
 fmt.Println(claims.Subject)   // User email
 fmt.Println(claims.Roles)     // User roles
 fmt.Println(claims.ExpiresAt) // Token expiration
@@ -115,7 +125,7 @@ fmt.Println(claims.ClientID)  // Client identifier
 
 #### Renew Access Token
 ```go
-newAuth, err := guard.Authenticate.Renew(ctx, email, authenticated.RefreshToken)
+newAuth, err := guard.Authenticate.Renew(ctx, tenantID, email, authenticated.RefreshToken)
 if err != nil {
     log.Fatal(err)
 }
@@ -126,7 +136,7 @@ fmt.Println(newAuth.RefreshToken)
 
 #### Revoke Session
 ```go
-err := guard.Authenticate.Revoke(ctx, email, authenticated.AccessToken, clientID)
+err := guard.Authenticate.Revoke(ctx, tenantID, email, authenticated.AccessToken, clientID)
 if err != nil {
     log.Fatal(err)
 }
