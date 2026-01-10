@@ -27,11 +27,13 @@ func NewAccountClient(baseURL string, client *http.Client) *Account {
 }
 
 // Create will create a user account and send a verification email
-func (a Account) Create(ctx context.Context, email, password string) error {
+func (a Account) Create(ctx context.Context, tenantID, email, password string) error {
 	payload := struct {
+		TenantID string `json:"tenantId"`
 		Email    string `json:"email"`
 		Password string `json:"password"`
 	}{
+
 		Email:    email,
 		Password: password,
 	}
@@ -46,13 +48,15 @@ func (a Account) Create(ctx context.Context, email, password string) error {
 }
 
 // Verify will verify a account with a verification token supplied via email
-func (a Account) Verify(ctx context.Context, email, verificationToken string) error {
+func (a Account) Verify(ctx context.Context, tenantID, email, verificationToken string) error {
 	payload := struct {
-		Email string `json:"email"`
-		Token string `json:"token"`
+		TenantID string `json:"tenantId"`
+		Email    string `json:"email"`
+		Token    string `json:"token"`
 	}{
-		Email: email,
-		Token: verificationToken,
+		TenantID: tenantID,
+		Email:    email,
+		Token:    verificationToken,
 	}
 
 	err := doPost(ctx, fmt.Sprintf("%s/%s", a.baseURL, verifyUrl), payload,
@@ -66,12 +70,14 @@ func (a Account) Verify(ctx context.Context, email, verificationToken string) er
 }
 
 // ChangePassword changes a password for an account, valid access token is required
-func (a Account) ChangePassword(ctx context.Context, email, newPassword, accessToken string) error {
+func (a Account) ChangePassword(ctx context.Context, tenantID, email, newPassword, accessToken string) error {
 	payload := struct {
+		TenantID    string `json:"tenantId"`
 		Email       string `json:"email"`
 		NewPassword string `json:"newPassword"`
 		AccessToken string `json:"accessToken"`
 	}{
+		TenantID:    tenantID,
 		Email:       email,
 		NewPassword: newPassword,
 		AccessToken: accessToken,
