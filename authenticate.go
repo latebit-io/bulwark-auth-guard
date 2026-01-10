@@ -99,7 +99,8 @@ func (a *Authenticate) RequestMagicCode(ctx context.Context, tenantID, email str
 		TenantID string `json:"tenantId"`
 		Email    string `json:"email"`
 	}{
-		Email: email,
+		TenantID: tenantID,
+		Email:    email,
 	}
 
 	err := doPost(ctx, fmt.Sprintf("%s/%s", a.baseUrl, requestMagicCodeUrl), payload, nil, a.client)

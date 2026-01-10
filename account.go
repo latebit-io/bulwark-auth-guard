@@ -33,7 +33,7 @@ func (a Account) Create(ctx context.Context, tenantID, email, password string) e
 		Email    string `json:"email"`
 		Password string `json:"password"`
 	}{
-
+		TenantID: tenantID,
 		Email:    email,
 		Password: password,
 	}
