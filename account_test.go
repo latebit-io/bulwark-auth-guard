@@ -13,7 +13,7 @@ import (
 
 const baseUri = "http://localhost:8080"
 const mailHogUri = "http://localhost:8025"
-const testTenantID = "test-tenant"
+const testTenantID = "default"
 
 func TestAccountCreate(t *testing.T) {
 	client := &http.Client{}
