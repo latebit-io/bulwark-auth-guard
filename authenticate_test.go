@@ -24,7 +24,7 @@ func TestAuthenticatePasswordFlow(t *testing.T) {
 		t.Error(err)
 	}
 	deviceID := fmt.Sprintf("iPhone13%s", id.String())
-	authenticated, err := guard.Authenticate.Password(ctx, email, password, deviceID)
+	authenticated, err := guard.Authenticate.Password(ctx, testTenantID, email, password, deviceID)
 	if err != nil {
 		t.Error(err)
 	}
@@ -33,12 +33,12 @@ func TestAuthenticatePasswordFlow(t *testing.T) {
 		t.Error("Token not returned")
 	}
 
-	err = guard.Authenticate.Acknowledge(ctx, authenticated)
+	err = guard.Authenticate.Acknowledge(ctx, testTenantID, authenticated)
 	if err != nil {
 		t.Error(err)
 	}
 
-	claims, err := guard.Authenticate.ValidateAccessToken(ctx, authenticated.AccessToken)
+	claims, err := guard.Authenticate.ValidateAccessToken(ctx, testTenantID, authenticated.AccessToken)
 	if err != nil {
 		t.Error(err)
 	}
@@ -47,14 +47,14 @@ func TestAuthenticatePasswordFlow(t *testing.T) {
 		t.Error("Subject does not match email")
 	}
 
-	authenticated, err = guard.Authenticate.Renew(ctx, claims.Subject, authenticated.RefreshToken)
-	claims, err = guard.Authenticate.ValidateAccessToken(ctx, authenticated.AccessToken)
+	authenticated, err = guard.Authenticate.Renew(ctx, testTenantID, claims.Subject, authenticated.RefreshToken)
+	claims, err = guard.Authenticate.ValidateAccessToken(ctx, testTenantID, authenticated.AccessToken)
 
 	if claims.Subject != email {
 		t.Error("Refresh Token does not match email")
 	}
 
-	err = guard.Authenticate.Revoke(ctx, email, authenticated.AccessToken, clientID)
+	err = guard.Authenticate.Revoke(ctx, testTenantID, email, authenticated.AccessToken, clientID)
 	if err != nil {
 		t.Error(err)
 	}
@@ -72,7 +72,7 @@ func TestAuthenticateMagicCode(t *testing.T) {
 		t.Error(err)
 	}
 
-	err = guard.Authenticate.RequestMagicCode(ctx, email)
+	err = guard.Authenticate.RequestMagicCode(ctx, testTenantID, email)
 	if err != nil {
 		t.Error(err)
 	}
@@ -89,7 +89,7 @@ func TestAuthenticateMagicCode(t *testing.T) {
 	fmt.Printf("Message: %s\n", message.Subject())
 
 	deviceID := fmt.Sprintf("iPhone13%s", id.String())
-	authenticated, err := guard.Authenticate.MagicCode(ctx, email, code, deviceID)
+	authenticated, err := guard.Authenticate.MagicCode(ctx, testTenantID, email, code, deviceID)
 	if err != nil {
 		t.Error(err)
 	}
@@ -98,7 +98,7 @@ func TestAuthenticateMagicCode(t *testing.T) {
 		t.Error("Token not returned")
 	}
 
-	err = guard.Authenticate.Acknowledge(ctx, authenticated)
+	err = guard.Authenticate.Acknowledge(ctx, testTenantID, authenticated)
 	if err != nil {
 		t.Error(err)
 	}
@@ -110,7 +110,7 @@ func TestAuthenticateMagicCodeFail(t *testing.T) {
 	client := &http.Client{}
 	guard := NewGuard(baseUri, client)
 	ctx := context.Background()
-	err := guard.Authenticate.RequestMagicCode(ctx, email)
+	err := guard.Authenticate.RequestMagicCode(ctx, testTenantID, email)
 	if err == nil {
 		t.Error("should throw an magic link error")
 	}
@@ -118,7 +118,7 @@ func TestAuthenticateMagicCodeFail(t *testing.T) {
 }
 
 func createAndVerifyAccount(ctx context.Context, email, password string, guard *Guard, client *http.Client) error {
-	err := guard.Account.Create(ctx, email, password)
+	err := guard.Account.Create(ctx, testTenantID, email, password)
 	if err != nil {
 		return err
 	}
@@ -131,7 +131,7 @@ func createAndVerifyAccount(ctx context.Context, email, password string, guard *
 	if err != nil {
 		return err
 	}
-	err = guard.Account.Verify(ctx, email, message.Subject())
+	err = guard.Account.Verify(ctx, testTenantID, email, message.Subject())
 	if err != nil {
 		return err
 	}

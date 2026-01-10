@@ -13,13 +13,14 @@ import (
 
 const baseUri = "http://localhost:8080"
 const mailHogUri = "http://localhost:8025"
+const testTenantID = "test-tenant"
 
 func TestAccountCreate(t *testing.T) {
 	client := &http.Client{}
 	id := uuid.New()
 	guard := NewGuard(baseUri, client)
 	ctx := context.Background()
-	err := guard.Account.Create(ctx, fmt.Sprintf("%s@bulwark.io", id.String()), "password12!P")
+	err := guard.Account.Create(ctx, testTenantID, fmt.Sprintf("%s@bulwark.io", id.String()), "password12!P")
 	if err != nil {
 		t.Error(err)
 	}
@@ -30,12 +31,12 @@ func TestAccountCreateDuplicate(t *testing.T) {
 	id := uuid.New()
 	guard := NewGuard(baseUri, client)
 	ctx := context.Background()
-	err := guard.Account.Create(ctx, fmt.Sprintf("%s@bulwark.io", id.String()), "password12!P")
+	err := guard.Account.Create(ctx, testTenantID, fmt.Sprintf("%s@bulwark.io", id.String()), "password12!P")
 	if err != nil {
 		t.Error(err)
 	}
 
-	err = guard.Account.Create(ctx, fmt.Sprintf("%s@bulwark.io", id.String()), "password12!P")
+	err = guard.Account.Create(ctx, testTenantID, fmt.Sprintf("%s@bulwark.io", id.String()), "password12!P")
 	if err == nil {
 		t.Error(err)
 	}
@@ -47,7 +48,7 @@ func TestAccountCreateAndVerify(t *testing.T) {
 	email := fmt.Sprintf("%s@bulwark.io", id.String())
 	guard := NewGuard(baseUri, client)
 	ctx := context.Background()
-	err := guard.Account.Create(ctx, email, "password12!P")
+	err := guard.Account.Create(ctx, testTenantID, email, "password12!P")
 	if err != nil {
 		t.Error(err)
 	}
@@ -60,27 +61,27 @@ func TestAccountCreateAndVerify(t *testing.T) {
 	if err != nil {
 		t.Error(err)
 	}
-	err = guard.Account.Verify(ctx, email, message.Subject())
+	err = guard.Account.Verify(ctx, testTenantID, email, message.Subject())
 	if err != nil {
 		t.Error(err)
 	}
 	deviceID := fmt.Sprintf("iPhone13%s", id.String())
-	authenticated, err := guard.Authenticate.Password(ctx, email, "password12!P", deviceID)
+	authenticated, err := guard.Authenticate.Password(ctx, testTenantID, email, "password12!P", deviceID)
 	if err != nil {
 		t.Error(err)
 	}
 
-	err = guard.Authenticate.Acknowledge(ctx, authenticated)
+	err = guard.Authenticate.Acknowledge(ctx, testTenantID, authenticated)
 	if err != nil {
 		t.Error(err)
 	}
 
-	err = guard.Account.ChangePassword(ctx, email, "newPassword12!P", authenticated.AccessToken)
+	err = guard.Account.ChangePassword(ctx, testTenantID, email, "newPassword12!P", authenticated.AccessToken)
 	if err != nil {
 		t.Error(err)
 	}
 
-	authenticated, err = guard.Authenticate.Password(ctx, email, "newPassword12!P", deviceID)
+	authenticated, err = guard.Authenticate.Password(ctx, testTenantID, email, "newPassword12!P", deviceID)
 	if err != nil {
 		t.Error(err)
 	}

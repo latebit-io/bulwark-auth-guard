@@ -8,7 +8,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Overview
 
-**bulwark-auth-guard** is a Go client library for the bulwark-auth authentication service. It provides account management and authentication flows including password-based auth, magic code (passwordless) auth, token refresh, and revocation.
+**bulwark-auth-guard** is a Go client library for the bulwark-auth authentication service. It provides account management and authentication flows including password-based auth, magic code (passwordless) auth, token refresh, and revocation. The library supports multi-tenant architectures where users and sessions are isolated by tenant.
 
 ## Development Commands
 
@@ -39,18 +39,18 @@ go mod tidy
 - Provides unified access to all functionality
 
 **Account** - Manages account lifecycle
-- `Create(email, password)` - Creates account, triggers verification email
-- `Verify(email, verificationToken)` - Verifies account via email token
-- `ChangePassword(email, newPassword, accessToken)` - Changes password
+- `Create(tenantID, email, password)` - Creates account, triggers verification email
+- `Verify(tenantID, email, verificationToken)` - Verifies account via email token
+- `ChangePassword(tenantID, email, newPassword, accessToken)` - Changes password
 
 **Authenticate** - Handles authentication flows
-- `Password(email, clientID, password)` - Traditional auth
-- `MagicCode(email, clientID, magicCode)` - Passwordless auth
-- `RequestMagicCode(email)` - Sends magic code email
-- `Acknowledge(authenticated)` - **Must be called after every successful authentication**
-- `ValidateAccessToken(accessToken)` - Returns JWT claims
-- `Renew(email, refreshToken)` - Refreshes access token
-- `Revoke(email, accessToken, clientID)` - Revokes session
+- `Password(tenantID, email, password, clientID)` - Traditional auth
+- `MagicCode(tenantID, email, magicCode, clientID)` - Passwordless auth
+- `RequestMagicCode(tenantID, email)` - Sends magic code email
+- `Acknowledge(tenantID, authenticated)` - **Must be called after every successful authentication**
+- `ValidateAccessToken(tenantID, accessToken)` - Returns JWT claims (including tenantID)
+- `Renew(tenantID, email, refreshToken)` - Refreshes access token
+- `Revoke(tenantID, email, accessToken, clientID)` - Revokes session
 
 ### HTTP Helpers
 
@@ -74,14 +74,17 @@ Internal functions `doPost`, `doPut`, `doDelete` handle HTTP operations:
 - Tests use UUID-generated unique emails: `{uuid}@bulwark.io`
 - Email verification uses MailHog client (github.com/latebit-io/go-hog)
 - Tests follow full end-to-end flows
-- `baseUri` and `mailHogUri` constants defined in `account_test.go`
+- `baseUri`, `mailHogUri`, and `testTenantID` constants defined in `account_test.go`
+- All test operations use the `testTenantID` constant ("test-tenant")
 
 ### Context Usage
 All public methods accept `context.Context` as first parameter for proper cancellation and timeout handling.
 
 ## Important Notes
 
-1. **Acknowledge is required**: After any authentication method returns `Authenticated`, you must call `Acknowledge(authenticated)` to notify the server
-2. **clientID parameter**: Represents the device/client identifier, required for Password and MagicCode authentication
-3. **Test dependencies**: Tests require live bulwark-auth and MailHog instances
-4. **Single package**: Entire library is in package `bulwark` with no subpackages
+1. **Multi-tenancy**: All public methods require a `tenantID` parameter (first parameter after `context.Context`) to support tenant isolation
+2. **Acknowledge is required**: After any authentication method returns `Authenticated`, you must call `Acknowledge(tenantID, authenticated)` to notify the server
+3. **clientID parameter**: Represents the device/client identifier, required for Password and MagicCode authentication
+4. **Test dependencies**: Tests require live bulwark-auth and MailHog instances
+5. **Single package**: Entire library is in package `bulwark` with no subpackages
+6. **Access token claims**: The `AccessTokenClaims` struct includes a `TenantID` field returned from token validation

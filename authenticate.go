@@ -14,6 +14,7 @@ type Authenticated struct {
 }
 
 type AccessTokenClaims struct {
+	TenantID  string    `json:"tenantId"`
 	Roles     []string  `json:"roles"`
 	Issuer    string    `json:"issuer"`
 	Subject   string    `json:"subject"`
@@ -50,13 +51,15 @@ func NewAuthenticateClient(baseUrl string, client *http.Client) *Authenticate {
 }
 
 // Password traditional authentication by email and password
-func (a *Authenticate) Password(ctx context.Context, email, password, clientID string) (Authenticated, error) {
+func (a *Authenticate) Password(ctx context.Context, tenantID, email, password, clientID string) (Authenticated, error) {
 	authenticated := Authenticated{}
 	payload := struct {
+		TenantID string `json:"tenantId"`
 		Email    string `json:"email"`
 		Password string `json:"password"`
 		ClientID string `json:"clientId"`
 	}{
+		TenantID: tenantID,
 		Email:    email,
 		Password: password,
 		ClientID: clientID,
@@ -71,11 +74,13 @@ func (a *Authenticate) Password(ctx context.Context, email, password, clientID s
 }
 
 // Acknowledge notifies the server a token is in use, this should be done after each authentication
-func (a *Authenticate) Acknowledge(ctx context.Context, authenticated Authenticated) error {
+func (a *Authenticate) Acknowledge(ctx context.Context, tenantID string, authenticated Authenticated) error {
 	payload := struct {
+		TenantID     string `json:"tenantId"`
 		AccessToken  string `json:"accessToken"`
 		RefreshToken string `json:"refreshToken"`
 	}{
+		TenantID:     tenantID,
 		AccessToken:  authenticated.AccessToken,
 		RefreshToken: authenticated.RefreshToken,
 	}
@@ -89,11 +94,13 @@ func (a *Authenticate) Acknowledge(ctx context.Context, authenticated Authentica
 }
 
 // RequestMagicCode will send an email with a magic code link
-func (a *Authenticate) RequestMagicCode(ctx context.Context, email string) error {
+func (a *Authenticate) RequestMagicCode(ctx context.Context, tenantID, email string) error {
 	payload := struct {
-		Email string `json:"email"`
+		TenantID string `json:"tenantId"`
+		Email    string `json:"email"`
 	}{
-		Email: email,
+		TenantID: tenantID,
+		Email:    email,
 	}
 
 	err := doPost(ctx, fmt.Sprintf("%s/%s", a.baseUrl, requestMagicCodeUrl), payload, nil, a.client)
@@ -105,13 +112,15 @@ func (a *Authenticate) RequestMagicCode(ctx context.Context, email string) error
 }
 
 // MagicCode authenticates a user with email and a magic code
-func (a *Authenticate) MagicCode(ctx context.Context, email, magicCode, clientID string) (Authenticated, error) {
+func (a *Authenticate) MagicCode(ctx context.Context, tenantID, email, magicCode, clientID string) (Authenticated, error) {
 	authenticated := Authenticated{}
 	payload := struct {
+		TenantID string `json:"tenantId"`
 		Email    string `json:"email"`
 		Code     string `json:"code"`
 		ClientID string `json:"clientId"`
 	}{
+		TenantID: tenantID,
 		Email:    email,
 		Code:     magicCode,
 		ClientID: clientID,
@@ -125,12 +134,14 @@ func (a *Authenticate) MagicCode(ctx context.Context, email, magicCode, clientID
 	return authenticated, nil
 }
 
-func (a *Authenticate) ValidateAccessToken(ctx context.Context, accessToken string) (AccessTokenClaims, error) {
+func (a *Authenticate) ValidateAccessToken(ctx context.Context, tenantID string, accessToken string) (AccessTokenClaims, error) {
 	claims := AccessTokenClaims{}
 	payload := struct {
-		Token string `json:"token"`
+		TenantID string `json:"tenantId"`
+		Token    string `json:"token"`
 	}{
-		Token: accessToken,
+		TenantID: tenantID,
+		Token:    accessToken,
 	}
 
 	err := doPost(ctx, fmt.Sprintf("%s/%s", a.baseUrl, validateAccessTokenUrl), payload, &claims, a.client)
@@ -140,12 +151,14 @@ func (a *Authenticate) ValidateAccessToken(ctx context.Context, accessToken stri
 	return claims, nil
 }
 
-func (a *Authenticate) Renew(ctx context.Context, email, refreshToken string) (Authenticated, error) {
+func (a *Authenticate) Renew(ctx context.Context, tenantID, email, refreshToken string) (Authenticated, error) {
 	authenticated := Authenticated{}
 	payload := struct {
+		TenantID     string `json:"tenantId"`
 		Email        string `json:"email"`
 		RefreshToken string `json:"refreshToken"`
 	}{
+		TenantID:     tenantID,
 		Email:        email,
 		RefreshToken: refreshToken,
 	}
@@ -156,12 +169,14 @@ func (a *Authenticate) Renew(ctx context.Context, email, refreshToken string) (A
 	return authenticated, nil
 }
 
-func (a *Authenticate) Revoke(ctx context.Context, email, accessToken, clientID string) error {
+func (a *Authenticate) Revoke(ctx context.Context, tenantID, email, accessToken, clientID string) error {
 	payload := struct {
+		TenantID    string `json:"tenantId"`
 		Email       string `json:"email"`
 		ClientID    string `json:"clientId"`
 		AccessToken string `json:"accessToken"`
 	}{
+		TenantID:    tenantID,
 		Email:       email,
 		ClientID:    clientID,
 		AccessToken: accessToken,
